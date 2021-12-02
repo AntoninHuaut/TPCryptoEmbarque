@@ -23,13 +23,6 @@ def est_le_meme_point(P, Q):
     return P[0] == Q[0] and P[1] == Q[1] and P[2] == Q[2]
 
 
-def inverse_point(P, p):
-    if est_point_infini(P):
-        return P
-
-    return (P[0], (-P[1]) % p, P[2])
-
-
 def addition_points(A, B, p, P, Q):
     Xq = Q[0]
     Xp = P[0]
