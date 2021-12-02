@@ -1,6 +1,9 @@
 # FONTAINE Quentin, HUAUT Antonin
 # -*- coding: utf-8 -*-
 
+from Crypto.Util import number
+
+
 def est_point_infini(P):
     return P[2] == 0
 
@@ -43,7 +46,7 @@ def addition_points(A, B, p, P, Q):
         return (0, 0, 0)
 
     if not est_le_meme_point(P, Q) and Xp != Xq:
-        lamb = (Yq - Yp) * inverse_point([Xq - Xp, 0, 1], p)[0]
+        lamb = (Yq - Yp) * number.inverse(Xq - Xp, p) % p
         x = (lamb**2 - Xp - Xq) % p
         y = (lamb * (Xp - x) - Yp) % p
         return (x, y, 1)
@@ -52,7 +55,7 @@ def addition_points(A, B, p, P, Q):
         return (0, 0, 0)
 
     if est_le_meme_point(P, Q) and Yp != 0:
-        lamb = (3 * (Xp ** 2) + A) * inverse_point([0, 2 * Yp, 1], p)[1]
+        lamb = (3 * (Xp ** 2) + A) * number.inverse(2 * Yp, p) % p
         x = ((lamb ** 2) - (2 * Xp)) % p
         y = (lamb * (Xp - x) - Yp) % p
         return (x, y, 1)
@@ -75,9 +78,7 @@ def ordre_point(A, B, p, P):
     c = 1
 
     while not est_point_infini(X):
-        print(X, P)
         X = addition_points(A, B, p, X, P)
-        print(X, "\n\n")
         c += 1
 
     return c
