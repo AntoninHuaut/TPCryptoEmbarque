@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from Crypto.Util import number
+import math
 
 
 def est_point_infini(P):
@@ -39,7 +40,7 @@ def addition_points(A, B, p, P, Q):
         return (0, 0, 0)
 
     if not est_le_meme_point(P, Q) and Xp != Xq:
-        lamb = (Yq - Yp) * number.inverse(Xq - Xp, p) % p
+        lamb = (Yq - Yp) * (number.inverse(Xq - Xp, p) % p)
         x = (lamb**2 - Xp - Xq) % p
         y = (lamb * (Xp - x) - Yp) % p
         return (x, y, 1)
@@ -48,7 +49,7 @@ def addition_points(A, B, p, P, Q):
         return (0, 0, 0)
 
     if est_le_meme_point(P, Q) and Yp != 0:
-        lamb = (3 * (Xp ** 2) + A) * number.inverse(2 * Yp, p) % p
+        lamb = (3 * (Xp ** 2) + A) * (number.inverse(2 * Yp, p) % p)
         x = ((lamb ** 2) - (2 * Xp)) % p
         y = (lamb * (Xp - x) - Yp) % p
         return (x, y, 1)
@@ -90,7 +91,20 @@ def generateurs(A, B, p):
 
 
 def double_and_add(A, B, p, P, k):
-    return
+    Q = (0, 0, 0)
+
+    if (k == 0):
+        return Q
+
+    n = int(math.log(k, 2)) + 1
+
+    for i in range(n, -1, -1):
+        Q = addition_points(A, B, p, Q, Q)
+
+        if (k >> i) & 1 == 1:
+            Q = addition_points(A, B, p, Q, P)
+
+    return Q
 
 
 # Test verifie des points
@@ -132,3 +146,10 @@ print(ordre_point(3, 1, 5, (2, 1, 1)))
 print("\nGénérateurs")
 print("E1 :", generateurs(3, 2, 5))
 print("E2 :", generateurs(1, 2, 11))
+
+# Test double and add
+print("\nDouble and Add")
+resAttendu = ["0∞", "(2,4)", "(1, 1)", "(1, 4)", "(2, 1)", "0∞"]
+for k in range(0, 6):
+    res = str(double_and_add(3, 2, 5, (2, 4, 1), k))
+    print("k = " + str(k) + ", attendu " + resAttendu[k] + " : " + res)
