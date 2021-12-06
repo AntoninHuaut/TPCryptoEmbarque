@@ -110,11 +110,15 @@ def ecdh(A, B, p, P):
 
 
 # https://fr.wikipedia.org/wiki/Elliptic_curve_digital_signature_algorithm
-def ecdsa(A, B, p, P, n, m, a):
+def ecdsa(A, B, p, P, n, m, a, kConstantTestAttaque=None):
     s = a
     Q = double_and_add(A, B, p, P, s)
 
-    k = random.randint(1, n - 1)  # TODO k constant si attaque
+    if kConstantTestAttaque == None:
+        k = random.randint(1, n - 1)
+    else:
+        k = kConstantTestAttaque
+
     iJ = double_and_add(A, B, p, P, k)
     x = iJ[0] % n
 
@@ -155,8 +159,10 @@ print(test_Hasse(n, p))
 # Essayer de comprendre le resultat obtenu
 print("  => La précision est trop faible et donc ne permet pas de déduire le bon résultat")
 
-print("\nTEST nECDH")
+
+print("\nTEST ECDH")
 print(ecdh(A, B, p, G))
+
 
 privateKey = random.randint(1, n - 1)
 publicKey = double_and_add(A, B, p, G, privateKey)
@@ -168,4 +174,24 @@ print("  Message :", m)
 print("  Clé privée: ", privateKey)
 print("  Clé publique :", publicKey)
 print("  Signature :", sign)
-print("  Vérification signature, est-ce valide :", signVerif)
+print("  Vérification, signature valide :", signVerif)
+
+
+# print("\nTest Attack")
+# privateKey = random.randint(1, n - 1)
+# publicKey = double_and_add(A, B, p, G, privateKey)
+# m1 = "abc"
+# m2 = "def"
+# exceptedK = 7
+# s1 = ecdsa(A, B, p, G, n, m, privateKey, exceptedK)
+# s2 = ecdsa(A, B, p, G, n, m, privateKey, exceptedK)
+
+# sha1 = SHA256.new(m1.encode('UTF-8'))
+# Hm1 = number.bytes_to_long(sha1.digest())
+# sha2 = SHA256.new(m2.encode('UTF-8'))
+# Hm2 = number.bytes_to_long(sha2.digest())
+# print(Hm1 - Hm2)  # Toujours constant avec k constant
+
+# print(double_and_add(A, B, p, number.inverse(s1[0] - s2[0], n), (Hm1 - Hm2)))
+
+# foundK = (hex(m1) − hex(m2))(s1 − s2)
