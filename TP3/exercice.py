@@ -138,8 +138,7 @@ def ecdsa_verif(A, B, p, P, n, m, A1, sign):
     if 1 > t or t > n - 1 or 1 > s or s > n - 1:
         return None
 
-    sha = SHA256.new()
-    sha.update(m.encode('UTF-8'))
+    sha = SHA256.new(m.encode('UTF-8'))
     Hm = number.bytes_to_long(sha.digest())
 
     sInverse = number.inverse(s, n)
@@ -150,8 +149,21 @@ def ecdsa_verif(A, B, p, P, n, m, A1, sign):
     return t == i % n
 
 
-def attack_ecd(k):
-    print(k)
+def ecdsa_attack(s1, s2, kConstant):
+    if s1[0] != s2[0]:
+        return False
+
+    t = s1[0]
+    s1 = s1[1]
+    s2 = s2[1]
+
+    hm1 = number.bytes_to_long(SHA256.new(m1.encode('UTF-8')).digest())
+    hm2 = number.bytes_to_long(SHA256.new(m2.encode('UTF-8')).digest())
+
+    kHack = (hm1 - hm2) * number.inverse((s1 - s2), n) % n
+    iHack = (hm1 * s2 - hm2 * s1) * number.inverse(t*(s1 - s2), n) % n
+
+    return (kHack, iHack)
 
 
 print("\nTEST DE HASSE")
@@ -177,21 +189,18 @@ print("  Signature :", sign)
 print("  Vérification, signature valide :", signVerif)
 
 
-# print("\nTest Attack")
-# privateKey = random.randint(1, n - 1)
-# publicKey = double_and_add(A, B, p, G, privateKey)
-# m1 = "abc"
-# m2 = "def"
-# exceptedK = 7
-# s1 = ecdsa(A, B, p, G, n, m, privateKey, exceptedK)
-# s2 = ecdsa(A, B, p, G, n, m, privateKey, exceptedK)
+print("\nTest Attack")
+kConstant = 5
 
-# sha1 = SHA256.new(m1.encode('UTF-8'))
-# Hm1 = number.bytes_to_long(sha1.digest())
-# sha2 = SHA256.new(m2.encode('UTF-8'))
-# Hm2 = number.bytes_to_long(sha2.digest())
-# print(Hm1 - Hm2)  # Toujours constant avec k constant
+privateKey = random.randint(1, n - 1)
+m1 = "J'aime la crypto"
+m2 = "Je déteste la crypto"  # C'est bien sûr juste pour les tests
+s1 = ecdsa(A, B, p, G, n, m1, privateKey, kConstant)
+s2 = ecdsa(A, B, p, G, n, m2, privateKey, kConstant)
 
-# print(double_and_add(A, B, p, number.inverse(s1[0] - s2[0], n), (Hm1 - Hm2)))
-
-# foundK = (hex(m1) − hex(m2))(s1 − s2)
+print("  » Avec k =", kConstant)
+(kHack, iHack) = ecdsa_attack(s1, s2, kConstant)
+print(" kHack == k :", kHack == kConstant)
+print(" privateKeyHack == privateKey :", iHack == privateKey)
+if kHack == kConstant and iHack == privateKey:
+    print("  => L'attaque a réussi, on a retrouvé la clé privée !")
